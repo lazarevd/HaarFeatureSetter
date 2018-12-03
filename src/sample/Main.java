@@ -32,15 +32,15 @@ import java.util.stream.Collectors;
 public class Main extends Application {
 
     Scene scene;
-    Slider slider;
     private List<Path> paths = new ArrayList<>();
     private Map<Path, Image> images = new HashMap<Path, Image>();
     Image currentImage;
-
+    final int SLIDE_LINE_RIGHT = 600;
     private Line line = new Line(20, 20, 40, 40);
 
     ImageView imageView;
     Square square;
+    Thumb thumb;
 
     private int maxWidth, maxHeight;
 
@@ -78,35 +78,20 @@ public class Main extends Application {
                 Stream<Path> stream = paths.stream();
                 stream.filter(file -> validatePath(file));
                 loadFiles(paths);
-                slider.setMax(paths.size()-1);
+                thumb = new Thumb(0,0, paths.size()-1, SLIDE_LINE_RIGHT);
             }
         });
 
         StackPane root = new StackPane();
-        slider = new Slider();
-        slider.setMin(0);
-        slider.setMax(10);
-        slider.setValue(5);
-        slider.setShowTickLabels(true);
-        slider.setShowTickMarks(true);
-        slider.setMajorTickUnit(5);
-        slider.setBlockIncrement(1);
-        slider.valueProperty().addListener(event -> {
-            System.out.println(Math.round(slider.getValue()));
-            int sliderPos = (int)Math.round(slider.getValue());
-            Path path = paths.get(sliderPos);
-            currentImage = images.get(path);
-        });
-
-        slider.setSnapToTicks(true);
 
 
         square = new Square(20, 20, 20, 20);
-
         BorderPane bordImgViewPlane = new BorderPane();
         Canvas canvas = new Canvas( 128, 128 );
         bordImgViewPlane.setCenter(canvas);
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
+
 
 
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
@@ -128,6 +113,7 @@ public class Main extends Application {
                 square.y1 = (int)e.getY();
                 square.handleMoveRadius = 10;
             }
+
         });
 
         canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
@@ -143,8 +129,6 @@ public class Main extends Application {
             public void handle(long currentNanoTime)
             {
                 double t = (currentNanoTime - startNanoTime) / 1000000000.0;
-                double x = 232 + 128 * Math.cos(t);
-                double y = 232 + 128 * Math.sin(t);
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
                 gc.drawImage(currentImage, 0, 0);
                 gc.strokeLine(square.x1, square.y1, square.x1, square.y1+square.getHeight());
@@ -154,21 +138,74 @@ public class Main extends Application {
                 gc.strokeOval(square.x1-square.handleMoveRadius/2, square.y1 - square.handleMoveRadius/2, square.handleMoveRadius, square.handleMoveRadius);
                 gc.strokeOval(square.x1+square.getWidth()-square.handleScaleRadius/2, square.y1+square.getHeight() - square.handleScaleRadius/2, square.handleScaleRadius, square.handleScaleRadius);
 
+
             }
-
-
-
         }.start();
+
+        thumb = new Thumb(0,0, 300, SLIDE_LINE_RIGHT);
+        BorderPane bordTimeSlaiderPane = new BorderPane();
+        Canvas timeSliderCanvas = new Canvas( 600, 50 );
+        bordTimeSlaiderPane.setCenter(timeSliderCanvas);
+        GraphicsContext acnvasGc = timeSliderCanvas.getGraphicsContext2D();
+
+        timeSliderCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
+                e -> {
+            if (thumb.isPointInside(e.getX(), e.getY())) {
+                System.out.println("x: " +thumb.x + " val:" +thumb.getCurrentValue());
+                if (thumb.x >= 0 && thumb.x <= SLIDE_LINE_RIGHT) thumb.x = e.getX();
+                    }
+                if (thumb.x > SLIDE_LINE_RIGHT) thumb.x = SLIDE_LINE_RIGHT;
+                if (thumb.x < 0) thumb.x = 0;
+                Path path = paths.get(thumb.getCurrentValue());
+                currentImage = images.get(path);
+                });
+
+        new AnimationTimer()
+        {
+            final long startNanoTime = System.nanoTime();
+            public void handle(long currentNanoTime)
+            {
+                acnvasGc.clearRect(0, 0, timeSliderCanvas.getWidth(), timeSliderCanvas.getHeight());
+                acnvasGc.strokeLine(0, 0, SLIDE_LINE_RIGHT, 0);
+                acnvasGc.strokeOval(thumb.x, 0, 10, 10);
+            }
+        }.start();
+
         VBox vbox = new VBox(5);
-        vbox.getChildren().addAll(bordImgViewPlane, slider, btn);
+        vbox.getChildren().addAll(bordImgViewPlane, btn, bordTimeSlaiderPane);
         root.getChildren().add(vbox);
-        scene = new Scene(root, 300, 250);
+        scene = new Scene(root, 850, 250);
         primaryStage.setScene(scene);
         scene.setCursor(Cursor.HAND);
 
         primaryStage.show();
     }
 
+
+    class Thumb {
+        int handleMoveRadius = 3;
+        double x;
+        double y;
+        int maxValue;
+        int maxPosition;
+
+        public Thumb(double ix, double iy, int imaxValue, int imaxPosition) {
+            x = ix;
+            y = iy;
+            maxValue = imaxValue;
+            maxPosition = imaxPosition;
+        }
+
+        public int getCurrentValue() {
+
+
+            return (int)Math.round(x*((double)maxValue/(double)maxPosition));
+        }
+
+        public boolean isPointInside(double ix, double iy) {
+            return (x > this.x-handleMoveRadius && x < this.x+handleMoveRadius && y > this.y-handleMoveRadius && y < this.y+handleMoveRadius)?true:false;
+        }
+    }
 
 
     class Square {
