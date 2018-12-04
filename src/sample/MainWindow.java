@@ -82,8 +82,9 @@ public class MainWindow extends Application {
 
 
         keyframes.put(10, new SquareCoord(0,0,0,0));
-
         keyframes.put(50, new SquareCoord(0,0,0,0));
+        keyframes.put(576, new SquareCoord(0,0,0,0));
+        keyframes.put(873, new SquareCoord(0,0,0,0));
 
         timeslider = new Timeslider(this);
         primaryStage.setTitle("Hello World!");

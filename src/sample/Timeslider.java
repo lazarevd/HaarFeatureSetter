@@ -93,8 +93,15 @@ public class Timeslider {
             System.out.println("cur val: " + thumb.getCurrentValue() + " thumb.x: " + thumb.x);
         });
 
+        Button setKeyButton = new Button("key");
+        setKeyButton.setOnAction(e -> {
+            mainWindow.keyframes.put(new Integer(thumb.getCurrentValue()), mainWindow.new SquareCoord(mainWindow.square.x1, mainWindow.square.y1, mainWindow.square.x2, mainWindow.square.y2));
+            System.out.println(mainWindow.keyframes.size());
+        });
+
+
         HBox hboxButtons = new HBox();
-        hboxButtons.getChildren().addAll(prevButton, nextButton);
+        hboxButtons.getChildren().addAll(prevButton, nextButton, setKeyButton);
 
 
         thumb = new Thumb(0,0, 100, SLIDE_LINE_RIGHT);
@@ -120,14 +127,16 @@ public class Timeslider {
 
         new AnimationTimer() {
             public void handle(long currentNanoTime) {
+                canvasGc.setLineWidth(2);
                 canvasGc.setStroke(Color.BLACK);
                 canvasGc.clearRect(0, 0, timeSliderCanvas.getWidth(), timeSliderCanvas.getHeight());
-                canvasGc.strokeLine(0, 5, SLIDE_LINE_RIGHT, 5);
-                canvasGc.strokeOval(thumb.x.getValue(), 0, 10, 10);
+                canvasGc.strokeLine(0, 10, SLIDE_LINE_RIGHT, 10);
+                canvasGc.strokeOval(thumb.x.getValue(), 5, 5, 10);
 
                 for (Map.Entry<Integer, MainWindow.SquareCoord> entry : mainWindow.keyframes.entrySet()) {
                     canvasGc.setStroke(Color.GREEN);
-                    canvasGc.strokeLine(convertValueToSlidePos(entry.getKey().intValue()), 0,convertValueToSlidePos(entry.getKey().intValue()),5);
+                    canvasGc.setLineWidth(5);
+                    canvasGc.strokeLine(convertValueToSlidePos(entry.getKey().intValue()), 0,convertValueToSlidePos(entry.getKey().intValue()),10);
                 }
             }
         }.start();
