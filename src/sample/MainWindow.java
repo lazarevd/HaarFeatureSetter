@@ -16,6 +16,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -29,21 +30,32 @@ import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
-public class Main extends Application {
+public class MainWindow extends Application {
 
     Scene scene;
-    private List<Path> paths = new ArrayList<>();
-    private Map<Path, Image> images = new HashMap<Path, Image>();
-    Image currentImage;
-    final int SLIDE_LINE_RIGHT = 600;
-    private Line line = new Line(20, 20, 40, 40);
+    Timeslider timeslider;
 
-    ImageView imageView;
+    List<Path> paths = new ArrayList<>();
+    Map<Path, Image> images = new HashMap<Path, Image>();
+    Image currentImage;
+
+    Map<Integer, SquareCoord> keyframes = new TreeMap<>();
+
     Square square;
-    Thumb thumb;
+
 
     private int maxWidth, maxHeight;
 
+
+    class SquareCoord {
+        int lx,ly,rx,ry;
+        public SquareCoord(int x1, int y1, int x2, int y2) {
+            lx = x1;
+            ly = y1;
+            rx = x2;
+            ry = y2;
+        }
+    }
 
 
     private void loadFiles (List<Path> path) {
@@ -58,6 +70,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
+
         launch(args);
     }
 
@@ -66,6 +79,13 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+
+        keyframes.put(10, new SquareCoord(0,0,0,0));
+
+        keyframes.put(50, new SquareCoord(0,0,0,0));
+
+        timeslider = new Timeslider(this);
         primaryStage.setTitle("Hello World!");
         Button btn = new Button();
         btn.setText("Load Images");
@@ -78,7 +98,7 @@ public class Main extends Application {
                 Stream<Path> stream = paths.stream();
                 stream.filter(file -> validatePath(file));
                 loadFiles(paths);
-                thumb = new Thumb(0,0, paths.size()-1, SLIDE_LINE_RIGHT);
+                timeslider.thumb = timeslider.new Thumb(0,0, paths.size()-1, timeslider.SLIDE_LINE_RIGHT);
             }
         });
 
@@ -131,6 +151,7 @@ public class Main extends Application {
                 double t = (currentNanoTime - startNanoTime) / 1000000000.0;
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
                 gc.drawImage(currentImage, 0, 0);
+                gc.setStroke(Color.WHITE);
                 gc.strokeLine(square.x1, square.y1, square.x1, square.y1+square.getHeight());
                 gc.strokeLine(square.x1, square.y1+square.getHeight(), square.x1+square.getWidth(), square.y1+square.getHeight());
                 gc.strokeLine(square.x1+square.getWidth(), square.y1+square.getHeight(), square.x1+square.getWidth(), square.y1);
@@ -142,37 +163,11 @@ public class Main extends Application {
             }
         }.start();
 
-        thumb = new Thumb(0,0, 300, SLIDE_LINE_RIGHT);
-        BorderPane bordTimeSlaiderPane = new BorderPane();
-        Canvas timeSliderCanvas = new Canvas( 600, 50 );
-        bordTimeSlaiderPane.setCenter(timeSliderCanvas);
-        GraphicsContext acnvasGc = timeSliderCanvas.getGraphicsContext2D();
 
-        timeSliderCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
-                e -> {
-            if (thumb.isPointInside(e.getX(), e.getY())) {
-                System.out.println("x: " +thumb.x + " val:" +thumb.getCurrentValue());
-                if (thumb.x >= 0 && thumb.x <= SLIDE_LINE_RIGHT) thumb.x = e.getX();
-                    }
-                if (thumb.x > SLIDE_LINE_RIGHT) thumb.x = SLIDE_LINE_RIGHT;
-                if (thumb.x < 0) thumb.x = 0;
-                Path path = paths.get(thumb.getCurrentValue());
-                currentImage = images.get(path);
-                });
-
-        new AnimationTimer()
-        {
-            final long startNanoTime = System.nanoTime();
-            public void handle(long currentNanoTime)
-            {
-                acnvasGc.clearRect(0, 0, timeSliderCanvas.getWidth(), timeSliderCanvas.getHeight());
-                acnvasGc.strokeLine(0, 0, SLIDE_LINE_RIGHT, 0);
-                acnvasGc.strokeOval(thumb.x, 0, 10, 10);
-            }
-        }.start();
 
         VBox vbox = new VBox(5);
-        vbox.getChildren().addAll(bordImgViewPlane, btn, bordTimeSlaiderPane);
+        vbox.getChildren().addAll(bordImgViewPlane, btn);
+        timeslider.addToBox(vbox);
         root.getChildren().add(vbox);
         scene = new Scene(root, 850, 250);
         primaryStage.setScene(scene);
@@ -182,30 +177,7 @@ public class Main extends Application {
     }
 
 
-    class Thumb {
-        int handleMoveRadius = 3;
-        double x;
-        double y;
-        int maxValue;
-        int maxPosition;
 
-        public Thumb(double ix, double iy, int imaxValue, int imaxPosition) {
-            x = ix;
-            y = iy;
-            maxValue = imaxValue;
-            maxPosition = imaxPosition;
-        }
-
-        public int getCurrentValue() {
-
-
-            return (int)Math.round(x*((double)maxValue/(double)maxPosition));
-        }
-
-        public boolean isPointInside(double ix, double iy) {
-            return (x > this.x-handleMoveRadius && x < this.x+handleMoveRadius && y > this.y-handleMoveRadius && y < this.y+handleMoveRadius)?true:false;
-        }
-    }
 
 
     class Square {
