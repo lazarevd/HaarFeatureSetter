@@ -1,10 +1,10 @@
-package sample;
+package HaarSamples;
 
+import HaarSamples.MainWindow;
 import javafx.animation.AnimationTimer;
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableDoubleValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -33,37 +33,7 @@ public class Timeslider {
 
 
 
-    class Thumb {
-        double handleMoveRadius = 10.0;
-        SimpleDoubleProperty x = new SimpleDoubleProperty();
-        double y;
-        int maxValue;
-        double maxPosition;
 
-        public Thumb(double ix, double iy, int imaxValue, double imaxPosition) {
-            x.set(ix);
-            y = iy;
-            maxValue = imaxValue;
-            maxPosition = imaxPosition;
-            x.addListener(new ChangeListener<Number>() {
-                @Override
-                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                    Path path = mainWindow.paths.get(thumb.getCurrentValue());
-                    mainWindow.currentImage = mainWindow.images.get(path);
-                }
-            });
-        }
-
-        public int getCurrentValue() {
-            return (int)Math.round(x.getValue()*((double)maxValue/maxPosition));
-        }
-
-
-
-        public boolean isPointInside(double ix, double iy) {
-            return (ix > x.getValue()-handleMoveRadius && ix < x.getValue()+handleMoveRadius && iy > y-handleMoveRadius && iy < y+handleMoveRadius)?true:false;
-        }
-    }
 
 
     Thumb thumb;
@@ -71,6 +41,7 @@ public class Timeslider {
     public Timeslider(MainWindow mainWindow) {
 
         this.mainWindow = mainWindow;
+        thumb = new Thumb(mainWindow,0,0, 100, SLIDE_LINE_RIGHT);
 
         vbox = new VBox();
 
@@ -78,9 +49,8 @@ public class Timeslider {
         nextButton.setOnAction(e -> {
             int val = thumb.getCurrentValue();
             if (val < thumb.maxValue) {
-                thumb.x.setValue(convertValueToSlidePos(val+1));
+                thumb.setCurrentValue(val+1);
             }
-            System.out.println("cur val: " + thumb.getCurrentValue() + " thumb.x: " + thumb.x);
         });
 
         Button prevButton = new Button("prev");
@@ -88,15 +58,13 @@ public class Timeslider {
 
             int val = thumb.getCurrentValue();
             if (val > 0) {
-                thumb.x.setValue(convertValueToSlidePos(val-1));
+                thumb.setCurrentValue(val-1);
             }
-            System.out.println("cur val: " + thumb.getCurrentValue() + " thumb.x: " + thumb.x);
         });
 
         Button setKeyButton = new Button("key");
         setKeyButton.setOnAction(e -> {
-            mainWindow.keyframes.put(new Integer(thumb.getCurrentValue()), mainWindow.new SquareCoord(mainWindow.square.x1, mainWindow.square.y1, mainWindow.square.x2, mainWindow.square.y2));
-            System.out.println(mainWindow.keyframes.size());
+            mainWindow.addKeyFrame(new Integer(thumb.getCurrentValue()), mainWindow.new SquareCoord(mainWindow.square.x1, mainWindow.square.y1, mainWindow.square.x2, mainWindow.square.y2));
         });
 
 
@@ -104,7 +72,7 @@ public class Timeslider {
         hboxButtons.getChildren().addAll(prevButton, nextButton, setKeyButton);
 
 
-        thumb = new Thumb(0,0, 100, SLIDE_LINE_RIGHT);
+        thumb = new Thumb(mainWindow, 0,0, 100, SLIDE_LINE_RIGHT);
         bordTimeSlaiderPane = new BorderPane();
         Canvas timeSliderCanvas = new Canvas(600, 50);
         bordTimeSlaiderPane.setCenter(timeSliderCanvas);
@@ -131,16 +99,21 @@ public class Timeslider {
                 canvasGc.setStroke(Color.BLACK);
                 canvasGc.clearRect(0, 0, timeSliderCanvas.getWidth(), timeSliderCanvas.getHeight());
                 canvasGc.strokeLine(0, 10, SLIDE_LINE_RIGHT, 10);
-                canvasGc.strokeOval(thumb.x.getValue(), 5, 5, 10);
+                canvasGc.strokeOval(thumb.getX(), 5, 5, 10);
 
                 for (Map.Entry<Integer, MainWindow.SquareCoord> entry : mainWindow.keyframes.entrySet()) {
                     canvasGc.setStroke(Color.GREEN);
                     canvasGc.setLineWidth(5);
-                    canvasGc.strokeLine(convertValueToSlidePos(entry.getKey().intValue()), 0,convertValueToSlidePos(entry.getKey().intValue()),10);
+                    canvasGc.strokeLine(thumb.convertValueToSlidePos(entry.getKey().intValue()), 0,thumb.convertValueToSlidePos(entry.getKey().intValue()),10);
                 }
             }
         }.start();
     }
+
+    public void setThumbMaxValue(int max) {
+        this.thumb.maxValue = max;
+    }
+
 
     public void addToBox(Pane box) {
         box.getChildren().add(vbox);
@@ -148,16 +121,13 @@ public class Timeslider {
 
 
     private void processSliderMoving(MouseEvent e) {
-        //if (thumb.isPointInside(e.getX(), e.getY())) {
-            System.out.println("x: " + thumb.x + " cur e: " + e.getX() + " val:" + thumb.getCurrentValue() + " val to pos: " + convertValueToSlidePos(thumb.getCurrentValue()));
-            if (thumb.x.getValue() >= 0 && thumb.x.getValue() <= SLIDE_LINE_RIGHT) thumb.x.setValue(e.getX());
+
+        if (thumb.getX() >= 0 && thumb.getX() <= SLIDE_LINE_RIGHT) thumb.setX(e.getX());
         //}
-        if (thumb.x.getValue() > SLIDE_LINE_RIGHT) thumb.x.setValue(SLIDE_LINE_RIGHT);
-        if (thumb.x.getValue() < 0) thumb.x.setValue(0);
+        if (thumb.getX() > SLIDE_LINE_RIGHT) thumb.setX(SLIDE_LINE_RIGHT);
+        if (thumb.getX() < 0) thumb.setX(0);
     }
 
-    private double convertValueToSlidePos(int value) {
-        return value*thumb.maxPosition/(double)thumb.maxValue;
-    }
+
 
 }

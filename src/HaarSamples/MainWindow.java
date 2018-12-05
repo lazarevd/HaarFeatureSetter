@@ -1,4 +1,4 @@
-package sample;
+package HaarSamples;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -9,15 +9,12 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -41,13 +38,16 @@ public class MainWindow extends Application {
 
     Map<Integer, SquareCoord> keyframes = new TreeMap<>();
 
+
+
+
     Square square;
 
 
     private int maxWidth, maxHeight;
 
 
-    class SquareCoord {
+    public class SquareCoord {
         int lx,ly,rx,ry;
         public SquareCoord(int x1, int y1, int x2, int y2) {
             lx = x1;
@@ -75,6 +75,9 @@ public class MainWindow extends Application {
     }
 
 
+    public void addKeyFrame(Integer key, SquareCoord squareCoord) {
+        keyframes.put(key, squareCoord);
+    }
 
 
     @Override
@@ -99,7 +102,7 @@ public class MainWindow extends Application {
                 Stream<Path> stream = paths.stream();
                 stream.filter(file -> validatePath(file));
                 loadFiles(paths);
-                timeslider.thumb = timeslider.new Thumb(0,0, paths.size()-1, timeslider.SLIDE_LINE_RIGHT);
+                timeslider.setThumbMaxValue(paths.size()-1);
             }
         });
 
@@ -233,5 +236,8 @@ public class MainWindow extends Application {
         }
     return retList;
     }
+
+
+
 
 }
