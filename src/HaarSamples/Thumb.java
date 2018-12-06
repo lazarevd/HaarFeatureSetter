@@ -25,8 +25,13 @@ class Thumb {
         maxPosition = imaxPosition;
         currentValue.addListener((observable, oldValue, newValue) -> {
             x.setValue(convertValueToSlidePos(currentValue.getValue()));
-            Path path = mainWindow.paths.get(getCurrentValue());
-            mainWindow.currentImage = mainWindow.images.get(path);
+            try {
+                Path path = mainWindow.paths.get(getCurrentValue());
+                mainWindow.currentImage = mainWindow.images.get(path);
+                mainW.timeslider.setSquarePaneFromKey(mainWindow.squarePane, getCurrentValue());
+            } catch (IndexOutOfBoundsException ie) {
+                System.out.println("No images loaded");
+            }
         });
 
         x.addListener((observable, oldValue, newValue) -> {
@@ -62,4 +67,5 @@ class Thumb {
     public boolean isPointInside(double ix, double iy) {
         return (ix > x.getValue()-handleMoveRadius && ix < x.getValue()+handleMoveRadius && iy > y-handleMoveRadius && iy < y+handleMoveRadius)?true:false;
     }
+
 }
