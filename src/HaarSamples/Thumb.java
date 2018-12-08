@@ -29,6 +29,7 @@ class Thumb {
                 Path path = mainWindow.paths.get(getCurrentValue());
                 mainWindow.currentImage = mainWindow.images.get(path);
                 mainW.timeslider.setSquarePaneFromKey(mainWindow.squarePane, getCurrentValue());
+
             } catch (IndexOutOfBoundsException ie) {
                 System.out.println("No images loaded");
             }

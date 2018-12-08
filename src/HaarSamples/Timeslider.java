@@ -18,7 +18,7 @@ import java.util.TreeMap;
 public class Timeslider {
 
     MainWindow mainWindow;
-    BorderPane bordTimeSlaiderPane;
+    BorderPane bordTimeSliderPane;
     GraphicsContext canvasGc;
     VBox vbox;
 
@@ -26,7 +26,7 @@ public class Timeslider {
 
     final double SLIDE_LINE_RIGHT = 600.0;
 
-    Map<Integer, SquareCoord> keyframes = new TreeMap<>();
+    private Map<Integer, SquareCoord> keyframes = new TreeMap<>();
     private Map<Integer, SquareCoord> frames;
 
 
@@ -68,7 +68,7 @@ public class Timeslider {
 
         Button setKeyButton = new Button("key");
         setKeyButton.setOnAction(e -> {
-            setKey();
+            setKeyAtThumb();
         });
 
 
@@ -77,12 +77,12 @@ public class Timeslider {
 
 
         thumb = new Thumb(mainWindow, 0,0, 100, SLIDE_LINE_RIGHT);
-        bordTimeSlaiderPane = new BorderPane();
+        bordTimeSliderPane = new BorderPane();
         Canvas timeSliderCanvas = new Canvas(600, 50);
-        bordTimeSlaiderPane.setCenter(timeSliderCanvas);
+        bordTimeSliderPane.setCenter(timeSliderCanvas);
         canvasGc = timeSliderCanvas.getGraphicsContext2D();
 
-        vbox.getChildren().addAll(bordTimeSlaiderPane, hboxButtons);
+        vbox.getChildren().addAll(bordTimeSliderPane, hboxButtons);
 
 
         timeSliderCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
@@ -139,14 +139,21 @@ public class Timeslider {
         thumb.setCurrentValue(thumb.getCurrentValue()+1);
     }
 
+    public void setFrame(int frame) {
+        thumb.setCurrentValue(frame);
+    }
+
     public void prevFrame() {
         thumb.setCurrentValue(thumb.getCurrentValue()-1);
     }
 
-    public void setKey() {
+    public void setKeyAtThumb() {
         addKeyFrame(new Integer(thumb.getCurrentValue()), new SquareCoord(mainWindow.squarePane.square.x1, mainWindow.squarePane.square.y1, mainWindow.squarePane.square.x2, mainWindow.squarePane.square.y2));
     }
 
+    public void clearKeys() {
+        keyframes.clear();
+    }
 
     public void setThumbMaxValue(int max) {
         this.thumb.maxValue = max;
@@ -240,4 +247,7 @@ public class Timeslider {
         return ret;
     }
 
+    public Map<Integer, SquareCoord> getFrames() {
+        return new TreeMap<Integer, SquareCoord>(frames);
+    }
 }

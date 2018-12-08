@@ -24,6 +24,21 @@ public class SquarePane {
             y1 = iy1;
             x2 = ix2;
             y2 = iy2;
+
+
+
+
+        }
+
+
+
+
+        public int getWidth() {
+            return Math.abs(x2 - x1);
+        }
+
+        public int getHeight() {
+            return Math.abs(y2 - y1);
         }
 
 
