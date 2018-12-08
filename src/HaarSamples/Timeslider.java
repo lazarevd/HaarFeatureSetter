@@ -1,15 +1,18 @@
 package HaarSamples;
 
 import javafx.animation.AnimationTimer;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.util.converter.NumberStringConverter;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,7 +32,7 @@ public class Timeslider {
     private Map<Integer, SquareCoord> keyframes = new TreeMap<>();
     private Map<Integer, SquareCoord> frames;
 
-
+    TextField currentKey;
 
 
 
@@ -72,8 +75,12 @@ public class Timeslider {
         });
 
 
+        currentKey = new TextField();
+        currentKey.textProperty().bindBidirectional(thumb.currentValue, new NumberStringConverter());
+
+
         HBox hboxButtons = new HBox();
-        hboxButtons.getChildren().addAll(prevButton, nextButton, setKeyButton);
+        hboxButtons.getChildren().addAll(prevButton, nextButton, setKeyButton, currentKey);
 
 
         thumb = new Thumb(mainWindow, 0,0, 100, SLIDE_LINE_RIGHT);
@@ -134,6 +141,17 @@ public class Timeslider {
         frames = genInterpolatedCoords(getKeyframes());
     }
 
+    public void removeKey(Integer key) {
+        keyframes.remove(key);
+        frames = genInterpolatedCoords(getKeyframes());
+    }
+
+    public void clearKeys() {
+        System.out.println("Clear " + keyframes.size());
+        keyframes.clear();
+        System.out.println("Cleared " + keyframes.size());
+        frames = genInterpolatedCoords(getKeyframes());
+    }
 
     public void nextFrame() {
         thumb.setCurrentValue(thumb.getCurrentValue()+1);
@@ -151,9 +169,6 @@ public class Timeslider {
         addKeyFrame(new Integer(thumb.getCurrentValue()), new SquareCoord(mainWindow.squarePane.square.x1, mainWindow.squarePane.square.y1, mainWindow.squarePane.square.x2, mainWindow.squarePane.square.y2));
     }
 
-    public void clearKeys() {
-        keyframes.clear();
-    }
 
     public void setThumbMaxValue(int max) {
         this.thumb.maxValue = max;
@@ -193,15 +208,32 @@ public class Timeslider {
 
         Map<Integer, SquareCoord> ret = new TreeMap<Integer, SquareCoord>();
 
-        Map.Entry<Integer, SquareCoord> firstElem = keyframes.entrySet().iterator().next();//it ll be first keyframe (for TreeMapOnly)
-        int lastKeyFrame = 0;
-        SquareCoord lastCoord = firstElem.getValue();
-        for (Map.Entry<Integer, SquareCoord> en : keyframes.entrySet()) {
-            ret.putAll(interpolateCoords(lastKeyFrame, en.getKey(), lastCoord, en.getValue()));
-            lastKeyFrame = en.getKey();
-            lastCoord = en.getValue();
-        }
+        //for empty list
+        frames.clear();
+        System.out.println(mainWindow.squarePane.square);
 
+        if (keyframes.size() < 1) {
+            for (int i = 0; i < frames.size(); i++) {
+                ret.put(i, new SquareCoord(
+                        mainWindow.squarePane.square.x1,
+                        mainWindow.squarePane.square.x2,
+                        mainWindow.squarePane.square.y1,
+                        mainWindow.squarePane.square.y2));
+            }
+        } else {
+
+            Map.Entry<Integer, SquareCoord> firstElem = keyframes.entrySet().iterator().next();//it ll be first keyframe (for TreeMapOnly)
+            int lastKeyFrame = 0;
+            SquareCoord lastCoord = firstElem.getValue();
+            for (Map.Entry<Integer, SquareCoord> en : keyframes.entrySet()) {
+                ret.putAll(interpolateCoords(lastKeyFrame, en.getKey(), lastCoord, en.getValue()));
+                lastKeyFrame = en.getKey();
+                lastCoord = en.getValue();
+            }
+            for (int i = lastKeyFrame; i < frames.size(); i++) {//for last frames without keyframe on the right
+                ret.put(i, lastCoord);
+            }
+        }
 
 
         return ret;
@@ -218,13 +250,11 @@ public class Timeslider {
         double lLength = lVector.mag();
         double rLength = rVector.mag();
 
-
         double lFrameVecMag = lLength/(double) frameCount;
         double rFrameVecMag = rLength/(double) frameCount;
 
         Vector lFrameVec = lVector.norm().mul(lFrameVecMag);
         Vector rFrameVec = rVector.norm().mul(rFrameVecMag);
-
 
         Map <Integer, SquareCoord> ret = new TreeMap<>();
 
@@ -237,13 +267,6 @@ public class Timeslider {
             lTmpVec = lTmpVec.add(lFrameVec);
             rTmpVec = rTmpVec.add(rFrameVec);
         }
-
-        System.out.println("stCoords: " + stCoords + " endCoords:" + endCoords);
-        for (Map.Entry<Integer, SquareCoord> en : ret.entrySet()) {
-            System.out.println(en.getKey()+" - " + en.getValue());
-        }
-
-
         return ret;
     }
 

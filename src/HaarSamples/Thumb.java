@@ -2,9 +2,11 @@ package HaarSamples;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import sun.applet.Main;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.nio.file.Path;
 
@@ -12,12 +14,13 @@ class Thumb {
     MainWindow mainWindow;
     double handleMoveRadius = 10.0;
     private SimpleDoubleProperty x = new SimpleDoubleProperty();
-    private SimpleIntegerProperty currentValue = new SimpleIntegerProperty();
+    public SimpleIntegerProperty currentValue = new SimpleIntegerProperty();
     double y;
     int maxValue;
     double maxPosition;
 
     public Thumb(MainWindow mainW, double ix, double iy, int imaxValue, double imaxPosition) {
+
         this.mainWindow = mainW;
         x.set(ix);
         y = iy;
@@ -40,6 +43,8 @@ class Thumb {
         });
 
     }
+
+
 
     public double getX() {
         return this.x.getValue();

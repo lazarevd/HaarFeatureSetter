@@ -198,15 +198,15 @@ public class MainWindow extends Application {
         Menu editFile = new Menu("Edit");
         menuBar.getMenus().addAll(editFile);
         MenuItem clearKeys = new MenuItem("Clear keys");
-        savePosFile.setOnAction(e -> {
+        clearKeys.setOnAction(e -> {
                     timeslider.clearKeys();
                 }
         );
         editFile.getItems().add(clearKeys);
 
-
-        timeslider = new Timeslider(this);
         squarePane = new SquarePane(this);
+        timeslider = new Timeslider(this);
+
         primaryStage.setTitle("Hello World!");
 
 

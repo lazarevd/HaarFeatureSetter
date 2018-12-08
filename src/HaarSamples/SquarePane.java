@@ -43,11 +43,11 @@ public class SquarePane {
 
 
         public boolean isPointMove(int x, int y) {
-            return  (x > this.x1-handleMoveRadius && x < this.x1+handleMoveRadius && y > this.y1-handleMoveRadius && y < this.y1+handleMoveRadius)?true:false;
+            return x > this.x1 - handleMoveRadius && x < this.x1 + handleMoveRadius && y > this.y1 - handleMoveRadius && y < this.y1 + handleMoveRadius;
         }
 
         public boolean isPointScale(int x, int y) {
-            return  (x > this.x2-handleScaleRadius && x < this.x2+handleScaleRadius && y > this.y2-handleScaleRadius && y < this.y2+handleScaleRadius)?true:false;
+            return x > this.x2-handleScaleRadius && x < this.x2+handleScaleRadius && y > this.y2-handleScaleRadius && y < this.y2+handleScaleRadius;
         }
     }
 
