@@ -1,8 +1,6 @@
 package HaarSamples;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
@@ -29,16 +27,14 @@ import java.util.stream.Collectors;
 
 public class MainWindow extends Application {
 
-    Scene scene;
+    private Scene scene;
     Timeslider timeslider;
 
     List<Path> paths = new ArrayList<>();
-    Map<Path, Image> images = new HashMap<>();
+    final Map<Path, Image> images = new HashMap<>();
     Image currentImage;
 
-    String lastImagesLoadPath = "c:/";
-    String lastKeysLoadPath = "c:/";
-    String lastDatFilesLoadPath = "c:/";
+    private String lastLoadPath = "c:/";
 
 
 
@@ -53,29 +49,27 @@ public class MainWindow extends Application {
 
     private void savePosFile(Stage stage) {
         FileChooser fileChooser = new FileChooser();
-        File lastDatFilesLoad = new File(lastDatFilesLoadPath);
+        File lastDatFilesLoad = new File(lastLoadPath);
         fileChooser.setInitialDirectory(lastDatFilesLoad);
-        fileChooser.setTitle("Save Image");
+        fileChooser.setTitle("Save Positives File");
         File file = fileChooser.showSaveDialog(stage);
-        lastDatFilesLoadPath = file.getParentFile().getAbsolutePath();
-        int currentThumbPos = timeslider.thumb.getCurrentValue();
+        lastLoadPath = file.getParentFile().getAbsolutePath();
         if (file != null) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
-                int frame = 0;
-                while (frame < timeslider.getFrames().size()) {
-                    writer.println(paths.get(frame) + " " + "1 "
-                            + squarePane.square.x1 + " "
-                            + squarePane.square.x2 + " "
-                            + squarePane.square.getWidth() + " "
-                            + squarePane.square.getHeight());
-                    timeslider.setFrame(frame++);
+                for (Map.Entry<Integer, SquareCoord> en : timeslider.getFrames().entrySet()) {
+                    SquareCoord sqCoord = en.getValue();
+                    writer.println(paths.get(en.getKey()) + " "
+                            + "1 "
+                            + sqCoord.lx + " "
+                            + sqCoord.ly + " "
+                            + sqCoord.getWidth() + " "
+                            + sqCoord.getHeight());
                 }
                 writer.close();
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
             }
-            timeslider.thumb.setCurrentValue(currentThumbPos);
         }
 
 
@@ -84,11 +78,11 @@ public class MainWindow extends Application {
 
     private void saveKeys(Stage stage) {
         FileChooser fileChooser = new FileChooser();
-        File lastKeysFilesLoad = new File(lastKeysLoadPath);
+        File lastKeysFilesLoad = new File(lastLoadPath);
         fileChooser.setInitialDirectory(lastKeysFilesLoad);
-        fileChooser.setTitle("Save Image");
+        fileChooser.setTitle("Save Keys");
         File file = fileChooser.showSaveDialog(stage);
-        lastKeysLoadPath = file.getParentFile().getAbsolutePath();
+        lastLoadPath = file.getParentFile().getAbsolutePath();
         if (file != null) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
@@ -105,11 +99,11 @@ public class MainWindow extends Application {
 
     private void loadKeys(Stage stage) {
         FileChooser fileChooser = new FileChooser();
-        File lastKeysFilesLoad = new File(lastKeysLoadPath);
+        File lastKeysFilesLoad = new File(lastLoadPath);
         fileChooser.setInitialDirectory(lastKeysFilesLoad);
         fileChooser.setTitle("Load Keys");
         File file = fileChooser.showOpenDialog(stage);
-        lastKeysLoadPath = file.getParentFile().getAbsolutePath();
+        lastLoadPath = file.getParentFile().getAbsolutePath();
         try (Stream<String> files = Files.lines(file.toPath())) {
             if (files != null) {
                 timeslider.clearKeys();
@@ -129,7 +123,7 @@ public class MainWindow extends Application {
                         }
                     }
                     if (keyFrame > 0) {
-                        timeslider.addKeyFrame(keyFrame, new SquareCoord(coords[0], coords[1],coords[0] + coords[2], coords[1] + coords[3]));
+                        timeslider.addKeyFrame(keyFrame, new SquareCoord(coords[0], coords[1],coords[2], coords[3]));
                     }
                 });
             }
@@ -147,11 +141,10 @@ public class MainWindow extends Application {
         paths = getPaths(stage);
 
         Stream<Path> stream = paths.stream();
-        stream.filter(file -> validatePath(file));
+        paths = stream.filter(this::validatePath).collect(Collectors.toList());
 
         paths.forEach(p -> {
             Image img = new Image("file:" + p);
-            System.out.println("IMG " + img);
             images.put(p, img);
             if (img.getHeight() > maxHeight)  maxHeight = (int)img.getHeight();
             if (img.getWidth() > maxWidth)  maxWidth = (int)img.getWidth();
@@ -179,9 +172,7 @@ public class MainWindow extends Application {
         menuBar.getMenus().addAll(menuFile);
 
         MenuItem loadImages = new MenuItem("Load images");
-        loadImages.setOnAction(e -> {
-                                     loadImages(primaryStage);
-                             }
+        loadImages.setOnAction(e -> loadImages(primaryStage)
         );
         menuFile.getItems().add(loadImages);
         MenuItem saveKeys = new MenuItem("Save keys");
@@ -209,12 +200,33 @@ public class MainWindow extends Application {
 
         Menu editFile = new Menu("Edit");
         menuBar.getMenus().addAll(editFile);
+
+
+
+        MenuItem deleteKey = new MenuItem("Delete key");
+        deleteKey.setOnAction(e -> {
+            timeslider.removeKey(timeslider.thumb.getCurrentValue());
+        });
+        editFile.getItems().add(deleteKey);
+
         MenuItem clearKeys = new MenuItem("Clear keys");
         clearKeys.setOnAction(e -> {
                     timeslider.clearKeys();
                 }
         );
         editFile.getItems().add(clearKeys);
+
+        MenuItem resetSquare = new MenuItem("Reset square");
+        resetSquare.setOnAction(e -> {
+                    squarePane.square.lx = 5;
+                    squarePane.square.ly = 5;
+                    squarePane.square.rx = 25;
+                    squarePane.square.ry = 25;
+                }
+        );
+        editFile.getItems().add(resetSquare);
+
+
 
         squarePane = new SquarePane(this);
         timeslider = new Timeslider(this);
@@ -274,13 +286,13 @@ public class MainWindow extends Application {
     }
 
     private List<Path> getPaths(Stage stage) {
-        List<Path> retList = new ArrayList<Path>();
+        List<Path> retList = new ArrayList<>();
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Load images");
-        File lastImagesFilesLoad = new File(lastImagesLoadPath);
+        File lastImagesFilesLoad = new File(lastLoadPath);
         chooser.setInitialDirectory(lastImagesFilesLoad);
         File selectedDirectory = chooser.showDialog(stage);
-        lastImagesLoadPath = selectedDirectory.getAbsolutePath();
+        lastLoadPath = selectedDirectory.getAbsolutePath();
         System.out.println("Loaded images from: " +selectedDirectory.getAbsolutePath());
         try (Stream<Path> paths = Files.walk(Paths.get(selectedDirectory.getAbsolutePath()))) {
             retList = paths

@@ -29,9 +29,7 @@ public class Vector {
 
     public Vector norm() {
         double mag = mag();
-        Vector ret = new Vector(x/mag, y/mag);
-        return ret;
-
+        return new Vector(x/mag, y/mag);
     }
 
     public Vector mul (double k) {

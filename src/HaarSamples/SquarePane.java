@@ -9,45 +9,34 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
-public class SquarePane {
+class SquarePane {
 
-    MainWindow mainWindow;
     Square square;
     VBox vbox;
+
+    int paneWidth = 50;
+    int paneHeight = 50;
 
     class Square {
         int handleMoveRadius = 3;
         int handleScaleRadius = 3;
-        int x1, y1, x2, y2;
-        private Square(int ix1, int iy1, int ix2, int iy2) {
-            x1 = ix1;
-            y1 = iy1;
-            x2 = ix2;
-            y2 = iy2;
-
-
-
-
+        int lx, ly, rx, ry;
+        private Square(int ilx, int ily, int irx, int iry) {
+            lx = ilx;
+            ly = ily;
+            rx = irx;
+            ry = iry;
         }
 
 
-
-
-        public int getWidth() {
-            return Math.abs(x2 - x1);
-        }
-
-        public int getHeight() {
-            return Math.abs(y2 - y1);
-        }
 
 
         public boolean isPointMove(int x, int y) {
-            return x > this.x1 - handleMoveRadius && x < this.x1 + handleMoveRadius && y > this.y1 - handleMoveRadius && y < this.y1 + handleMoveRadius;
+            return x > this.lx - handleMoveRadius && x < this.lx + handleMoveRadius && y > this.ly - handleMoveRadius && y < this.ly + handleMoveRadius;
         }
 
         public boolean isPointScale(int x, int y) {
-            return x > this.x2-handleScaleRadius && x < this.x2+handleScaleRadius && y > this.y2-handleScaleRadius && y < this.y2+handleScaleRadius;
+            return x > this.rx -handleScaleRadius && x < this.rx +handleScaleRadius && y > this.ry -handleScaleRadius && y < this.ry +handleScaleRadius;
         }
     }
 
@@ -55,10 +44,9 @@ public class SquarePane {
 
     public SquarePane(MainWindow mainWindow) {
         vbox = new VBox(5);
-        this.mainWindow = mainWindow;
         square = new Square(20, 20, 40, 40);
         BorderPane bordImgViewPlane = new BorderPane();
-        Canvas canvas = new Canvas( 128, 128 );
+        Canvas canvas = new Canvas( paneWidth, paneHeight );
         bordImgViewPlane.setCenter(canvas);
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
@@ -73,15 +61,24 @@ public class SquarePane {
                 e -> {
                     if (square.isPointScale((int)e.getX(), (int)e.getY())) {
                         System.out.println("drag " + e.getX() + ":" + e.getY());
-                        square.x2 = (int)e.getX();
-                        square.y2 = (int)e.getY();
-                        square.handleScaleRadius = 10;
+                        double ex = e.getX();
+                        double ey = e.getY();
+                        if (ex >= 0 && ex <= paneWidth && ey >= 0 && ey <= paneHeight) {
+                            square.rx = (int) e.getX();
+                            square.ry = (int) e.getY();
+                        }
+                            square.handleScaleRadius = 10;
+
                     }
 
                     if (square.isPointMove((int)e.getX(), (int)e.getY())) {
                         System.out.println("drag " + e.getX() + ":" + e.getY());
-                        square.x1 = (int)e.getX();
-                        square.y1 = (int)e.getY();
+                        double ex = e.getX();
+                        double ey = e.getY();
+                        if (ex >= 0 && ex <= paneWidth && ey >= 0 && ey <= paneHeight) {
+                            square.lx = (int) e.getX();
+                            square.ly = (int) e.getY();
+                        }
                         square.handleMoveRadius = 10;
                     }
 
@@ -102,15 +99,15 @@ public class SquarePane {
                 double t = (currentNanoTime - startNanoTime) / 1000000000.0;
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
                 gc.drawImage(mainWindow.currentImage, 0, 0);
-                gc.setStroke(Color.WHITE);
-                gc.strokeLine(square.x1, square.y1, square.x1, square.y2);
-                gc.strokeLine(square.x1, square.y2, square.x2, square.y2);
-                gc.strokeLine(square.x2, square.y2, square.x2, square.y1);
-                gc.strokeLine(square.x2, square.y1, square.x1, square.y1);
-                gc.strokeOval(square.x1-square.handleMoveRadius/2, square.y1 - square.handleMoveRadius/2, square.handleMoveRadius, square.handleMoveRadius);
-                gc.strokeOval(square.x2-square.handleScaleRadius/2, square.y2 - square.handleScaleRadius/2, square.handleScaleRadius, square.handleScaleRadius);
-                gc.strokeText("L", square.x1-2,square.y1-2);
-                gc.strokeText("R", square.x2+2,square.y2+2);
+                gc.setStroke(Color.GREEN);
+                gc.strokeLine(square.lx, square.ly, square.lx, square.ry);
+                gc.strokeLine(square.lx, square.ry, square.rx, square.ry);
+                gc.strokeLine(square.rx, square.ry, square.rx, square.ly);
+                gc.strokeLine(square.rx, square.ly, square.lx, square.ly);
+                gc.strokeOval(square.lx -square.handleMoveRadius/2, square.ly - square.handleMoveRadius/2, square.handleMoveRadius, square.handleMoveRadius);
+                gc.strokeOval(square.rx -square.handleScaleRadius/2, square.ry - square.handleScaleRadius/2, square.handleScaleRadius, square.handleScaleRadius);
+                gc.strokeText("L", square.lx -2,square.ly -2);
+                gc.strokeText("R", square.rx +2,square.ry +2);
             }
         }.start();
 

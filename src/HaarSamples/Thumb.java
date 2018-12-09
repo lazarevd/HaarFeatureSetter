@@ -11,10 +11,10 @@ import sun.java2d.pipe.SpanShapeRenderer;
 import java.nio.file.Path;
 
 class Thumb {
-    MainWindow mainWindow;
+    private final MainWindow mainWindow;
     double handleMoveRadius = 10.0;
     private SimpleDoubleProperty x = new SimpleDoubleProperty();
-    public SimpleIntegerProperty currentValue = new SimpleIntegerProperty();
+    private SimpleIntegerProperty currentValue = new SimpleIntegerProperty();
     double y;
     int maxValue;
     double maxPosition;
@@ -39,9 +39,7 @@ class Thumb {
             }
         });
 
-        x.addListener((observable, oldValue, newValue) -> {
-            currentValue.setValue(convertSlidePosToValue(x.getValue()));
-        });
+        x.addListener((observable, oldValue, newValue) -> currentValue.setValue(convertSlidePosToValue(x.getValue())));
 
     }
 
@@ -75,7 +73,7 @@ class Thumb {
     }
 
     public boolean isPointInside(double ix, double iy) {
-        return (ix > x.getValue()-handleMoveRadius && ix < x.getValue()+handleMoveRadius && iy > y-handleMoveRadius && iy < y+handleMoveRadius)?true:false;
+        return ix > x.getValue() - handleMoveRadius && ix < x.getValue() + handleMoveRadius && iy > y - handleMoveRadius && iy < y + handleMoveRadius;
     }
 
 }

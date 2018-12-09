@@ -13,43 +13,39 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
 
-public class Timeslider {
+class Timeslider {
 
-    MainWindow mainWindow;
-    BorderPane bordTimeSliderPane;
-    GraphicsContext canvasGc;
-    VBox vbox;
+    private final MainWindow mainWindow;
+    private BorderPane bordTimeSliderPane;
+    private GraphicsContext canvasGc;
+    private VBox vbox;
 
 
 
-    final double SLIDE_LINE_RIGHT = 600.0;
+    private final double SLIDE_LINE_RIGHT = 600.0;
 
     private Map<Integer, SquareCoord> keyframes = new TreeMap<>();
     private Map<Integer, SquareCoord> frames;
 
-    protected TextField textCurrentKey;
-    protected TextField textCurrentFile;
+    TextField textCurrentKey;
+    TextField textCurrentFile;
 
 
 
     Thumb thumb;
 
+    @SuppressWarnings("SpellCheckingInspection")
     public Timeslider(MainWindow mainWindow) {
 
         this.mainWindow = mainWindow;
         thumb = new Thumb(mainWindow,0,0, 100, SLIDE_LINE_RIGHT);
         frames = new TreeMap<>();
         vbox = new VBox();
-
-        addKeyFrame(0, new SquareCoord(5,5,30,30));
-        addKeyFrame(50, new SquareCoord(40,40,50,50));
-        addKeyFrame(100, new SquareCoord(60,10,70,50));
-        addKeyFrame(350, new SquareCoord(5,5,30,30));
-
 
         Button nextButton = new Button("next");
         nextButton.setOnAction(e -> {
@@ -69,16 +65,14 @@ public class Timeslider {
         });
 
         Button setKeyButton = new Button("key");
-        setKeyButton.setOnAction(e -> {
-            setKeyAtThumb();
-        });
+        setKeyButton.setOnAction(e -> setKeyAtThumb());
 
 
         textCurrentKey = new TextField();
         textCurrentKey.setMaxWidth(50);
         textCurrentKey.setOnKeyPressed(ke-> {
             if (ke.getCode().equals(KeyCode.ENTER)) {
-                int keyValue = 0;
+                int keyValue;
                 try {
                     keyValue = Integer.parseInt(textCurrentKey.getText());
                     thumb.setCurrentValue(keyValue);
@@ -90,6 +84,7 @@ public class Timeslider {
         });
 
         textCurrentFile = new TextField();
+        textCurrentFile.setMinWidth(500);
 
 
 
@@ -135,7 +130,7 @@ public class Timeslider {
                         canvasGc.setStroke(Color.GREEN);
                     }
                     canvasGc.setLineWidth(3);
-                    canvasGc.strokeLine(thumb.convertValueToSlidePos(entry.getKey().intValue()), 0,thumb.convertValueToSlidePos(entry.getKey().intValue()),10);
+                    canvasGc.strokeLine(thumb.convertValueToSlidePos(entry.getKey()), 0,thumb.convertValueToSlidePos(entry.getKey().intValue()),10);
                 }
             }
         }.start();
@@ -152,6 +147,11 @@ public class Timeslider {
 
     public void addKeyFrame(Integer key, SquareCoord squareCoord) {
         keyframes.put(key, squareCoord);
+        frames = genInterpolatedCoords(getKeyframes());
+    }
+
+    public void removeKeyFrame(Integer key) {
+        keyframes.remove(key);
         frames = genInterpolatedCoords(getKeyframes());
     }
 
@@ -180,7 +180,7 @@ public class Timeslider {
     }
 
     public void setKeyAtThumb() {
-        addKeyFrame(new Integer(thumb.getCurrentValue()), new SquareCoord(mainWindow.squarePane.square.x1, mainWindow.squarePane.square.y1, mainWindow.squarePane.square.x2, mainWindow.squarePane.square.y2));
+        addKeyFrame(thumb.getCurrentValue(), new SquareCoord(mainWindow.squarePane.square.lx, mainWindow.squarePane.square.ly, mainWindow.squarePane.square.rx, mainWindow.squarePane.square.ry));
     }
 
 
@@ -210,10 +210,10 @@ public class Timeslider {
         SquareCoord sCoord = frames.get(key);
 
         if (sCoord!=null) {
-            mainWindow.squarePane.square.x1 = sCoord.lx;
-            mainWindow.squarePane.square.y1 = sCoord.ly;
-            mainWindow.squarePane.square.x2 = sCoord.rx;
-            mainWindow.squarePane.square.y2 = sCoord.ry;
+            mainWindow.squarePane.square.lx = sCoord.lx;
+            mainWindow.squarePane.square.ly = sCoord.ly;
+            mainWindow.squarePane.square.rx = sCoord.rx;
+            mainWindow.squarePane.square.ry = sCoord.ry;
         }
     }
 
@@ -221,31 +221,43 @@ public class Timeslider {
 
     Map<Integer, SquareCoord> genInterpolatedCoords(TreeMap<Integer, SquareCoord> keyframes) {
 
-        Map<Integer, SquareCoord> ret = new TreeMap<Integer, SquareCoord>();
+        Map<Integer, SquareCoord> ret = new TreeMap<>();
 
         //for empty list
         frames.clear();
         System.out.println(mainWindow.squarePane.square);
 
-        if (keyframes.size() < 1) {
+        if (keyframes.size() < 1 ) {
             for (int i = 0; i < frames.size(); i++) {
                 ret.put(i, new SquareCoord(
-                        mainWindow.squarePane.square.x1,
-                        mainWindow.squarePane.square.x2,
-                        mainWindow.squarePane.square.y1,
-                        mainWindow.squarePane.square.y2));
+                        mainWindow.squarePane.square.lx,
+                        mainWindow.squarePane.square.ly,
+                        mainWindow.squarePane.square.rx,
+                        mainWindow.squarePane.square.ry));
             }
         } else {
 
-            Map.Entry<Integer, SquareCoord> firstElem = keyframes.entrySet().iterator().next();//it ll be first keyframe (for TreeMapOnly)
-            int lastKeyFrame = 0;
+
+            Iterator<Map.Entry<Integer,SquareCoord>> keysIterator = keyframes.entrySet().iterator();
+
+            Map.Entry<Integer, SquareCoord> firstElem = keysIterator.next();//it ll be first keyframe (for TreeMapOnly)
+
+            System.out.println("gen: " + firstElem.getKey());
+
+            for (int i = 0; i < firstElem.getKey(); i ++) {
+                ret.put(i, new SquareCoord(firstElem.getValue().lx, firstElem.getValue().ly, firstElem.getValue().rx, firstElem.getValue().ry ));
+            }
+
+            int lastKeyFrame = firstElem.getKey();
             SquareCoord lastCoord = firstElem.getValue();
-            for (Map.Entry<Integer, SquareCoord> en : keyframes.entrySet()) {
-                ret.putAll(interpolateCoords(lastKeyFrame, en.getKey(), lastCoord, en.getValue()));
+            while (keysIterator.hasNext()) {
+                Map.Entry<Integer, SquareCoord> en = keysIterator.next();
+                ret.putAll(interpolateCoords(lastKeyFrame, lastCoord, en.getKey(), en.getValue()));
                 lastKeyFrame = en.getKey();
                 lastCoord = en.getValue();
             }
-            for (int i = lastKeyFrame; i < frames.size(); i++) {//for last frames without keyframe on the right
+            for (int i = lastKeyFrame; i < thumb.maxValue; i++) {//for last frames without keyframe on the right
+                System.out.println("PUT last " + i);
                 ret.put(i, lastCoord);
             }
         }
@@ -255,7 +267,10 @@ public class Timeslider {
     }
 
 
-    Map<Integer, SquareCoord> interpolateCoords(int stFrame, int endFrame, SquareCoord stCoords, SquareCoord endCoords) {
+    Map<Integer, SquareCoord> interpolateCoords(int stFrame, SquareCoord stCoords, int endFrame, SquareCoord endCoords) {
+
+
+        System.out.println("interpolateCoords " + stFrame + " " + stCoords.toString() + "; " + endFrame + " " + endCoords.toString() + " " + mainWindow.paths.get(endFrame-1));
 
         int frameCount = endFrame - stFrame;
 
@@ -277,7 +292,8 @@ public class Timeslider {
         Vector lTmpVec = new Vector(stCoords.lx, stCoords.ly);
         Vector rTmpVec = new Vector(stCoords.rx, stCoords.ry);
         while (frame < endFrame) {
-            ret.put(frame, new SquareCoord((int)lTmpVec.x, (int)lTmpVec.y, (int)rTmpVec.x, (int)rTmpVec.y));
+            ret.put(frame-1, new SquareCoord((int)lTmpVec.x, (int)lTmpVec.y, (int)rTmpVec.x, (int)rTmpVec.y));
+            System.out.println("put frame: " + (frame-1) + " " + mainWindow.paths.get(frame-1) + (int)lTmpVec.x + " " + (int)lTmpVec.y);
             frame++;
             lTmpVec = lTmpVec.add(lFrameVec);
             rTmpVec = rTmpVec.add(rFrameVec);
@@ -286,6 +302,6 @@ public class Timeslider {
     }
 
     public Map<Integer, SquareCoord> getFrames() {
-        return new TreeMap<Integer, SquareCoord>(frames);
+        return new TreeMap<>(frames);
     }
 }
