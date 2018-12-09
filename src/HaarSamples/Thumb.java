@@ -29,10 +29,11 @@ class Thumb {
         currentValue.addListener((observable, oldValue, newValue) -> {
             x.setValue(convertValueToSlidePos(currentValue.getValue()));
             try {
-                Path path = mainWindow.paths.get(getCurrentValue());
+                Path path = mainWindow.paths.get(getCurrentValue()-1);
                 mainWindow.currentImage = mainWindow.images.get(path);
                 mainW.timeslider.setSquarePaneFromKey(mainWindow.squarePane, getCurrentValue());
-
+                mainW.timeslider.textCurrentKey.setText(Integer.toString(getCurrentValue()));
+                mainW.timeslider.textCurrentFile.setText(path.toString());
             } catch (IndexOutOfBoundsException ie) {
                 System.out.println("No images loaded");
             }
@@ -59,7 +60,10 @@ class Thumb {
     }
 
     public void setCurrentValue(int val) {
-        currentValue.setValue(val);
+        System.out.println(maxValue);
+        if (val > 0 && val < maxValue) {
+            currentValue.setValue(val);
+        }
     }
 
     public double convertValueToSlidePos(int value) {

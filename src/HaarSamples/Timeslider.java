@@ -1,18 +1,17 @@
 package HaarSamples;
 
 import javafx.animation.AnimationTimer;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.util.converter.NumberStringConverter;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,7 +31,8 @@ public class Timeslider {
     private Map<Integer, SquareCoord> keyframes = new TreeMap<>();
     private Map<Integer, SquareCoord> frames;
 
-    TextField currentKey;
+    protected TextField textCurrentKey;
+    protected TextField textCurrentFile;
 
 
 
@@ -65,7 +65,6 @@ public class Timeslider {
             int val = thumb.getCurrentValue();
             if (val > 0) {
                 prevFrame();
-                thumb.setCurrentValue(val-1);
             }
         });
 
@@ -75,12 +74,27 @@ public class Timeslider {
         });
 
 
-        currentKey = new TextField();
-        currentKey.textProperty().bindBidirectional(thumb.currentValue, new NumberStringConverter());
+        textCurrentKey = new TextField();
+        textCurrentKey.setMaxWidth(50);
+        textCurrentKey.setOnKeyPressed(ke-> {
+            if (ke.getCode().equals(KeyCode.ENTER)) {
+                int keyValue = 0;
+                try {
+                    keyValue = Integer.parseInt(textCurrentKey.getText());
+                    thumb.setCurrentValue(keyValue);
+                } catch (NumberFormatException nex) {
+                    System.out.println("not an intiger");
+                }
+
+            }
+        });
+
+        textCurrentFile = new TextField();
+
 
 
         HBox hboxButtons = new HBox();
-        hboxButtons.getChildren().addAll(prevButton, nextButton, setKeyButton, currentKey);
+        hboxButtons.getChildren().addAll(prevButton, nextButton, setKeyButton, textCurrentKey, textCurrentFile);
 
 
         thumb = new Thumb(mainWindow, 0,0, 100, SLIDE_LINE_RIGHT);
@@ -171,7 +185,8 @@ public class Timeslider {
 
 
     public void setThumbMaxValue(int max) {
-        this.thumb.maxValue = max;
+        System.out.println("mv " + max);
+        thumb.maxValue = max;
     }
 
 

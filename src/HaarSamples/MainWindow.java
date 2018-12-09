@@ -36,6 +36,9 @@ public class MainWindow extends Application {
     Map<Path, Image> images = new HashMap<>();
     Image currentImage;
 
+    String lastImagesLoadPath = "c:/";
+    String lastKeysLoadPath = "c:/";
+    String lastDatFilesLoadPath = "c:/";
 
 
 
@@ -50,8 +53,11 @@ public class MainWindow extends Application {
 
     private void savePosFile(Stage stage) {
         FileChooser fileChooser = new FileChooser();
+        File lastDatFilesLoad = new File(lastDatFilesLoadPath);
+        fileChooser.setInitialDirectory(lastDatFilesLoad);
         fileChooser.setTitle("Save Image");
         File file = fileChooser.showSaveDialog(stage);
+        lastDatFilesLoadPath = file.getParentFile().getAbsolutePath();
         int currentThumbPos = timeslider.thumb.getCurrentValue();
         if (file != null) {
             try {
@@ -78,8 +84,11 @@ public class MainWindow extends Application {
 
     private void saveKeys(Stage stage) {
         FileChooser fileChooser = new FileChooser();
+        File lastKeysFilesLoad = new File(lastKeysLoadPath);
+        fileChooser.setInitialDirectory(lastKeysFilesLoad);
         fileChooser.setTitle("Save Image");
         File file = fileChooser.showSaveDialog(stage);
+        lastKeysLoadPath = file.getParentFile().getAbsolutePath();
         if (file != null) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
@@ -96,8 +105,11 @@ public class MainWindow extends Application {
 
     private void loadKeys(Stage stage) {
         FileChooser fileChooser = new FileChooser();
+        File lastKeysFilesLoad = new File(lastKeysLoadPath);
+        fileChooser.setInitialDirectory(lastKeysFilesLoad);
         fileChooser.setTitle("Load Keys");
         File file = fileChooser.showOpenDialog(stage);
+        lastKeysLoadPath = file.getParentFile().getAbsolutePath();
         try (Stream<String> files = Files.lines(file.toPath())) {
             if (files != null) {
                 timeslider.clearKeys();
@@ -184,7 +196,7 @@ public class MainWindow extends Application {
                                  }
         );
         menuFile.getItems().add(loadKeys);
-        MenuItem savePosFile = new MenuItem("Build pos file");
+        MenuItem savePosFile = new MenuItem("Build positive file");
         savePosFile.setOnAction(e -> {
                                      savePosFile(primaryStage);
                              }
@@ -264,12 +276,12 @@ public class MainWindow extends Application {
     private List<Path> getPaths(Stage stage) {
         List<Path> retList = new ArrayList<Path>();
         DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("JavaFX Projects");
-        File defaultDirectory = new File("c:/");
-        chooser.setInitialDirectory(defaultDirectory);
+        chooser.setTitle("Load images");
+        File lastImagesFilesLoad = new File(lastImagesLoadPath);
+        chooser.setInitialDirectory(lastImagesFilesLoad);
         File selectedDirectory = chooser.showDialog(stage);
-        System.out.println("selected dir: " +selectedDirectory.getAbsolutePath());
-
+        lastImagesLoadPath = selectedDirectory.getAbsolutePath();
+        System.out.println("Loaded images from: " +selectedDirectory.getAbsolutePath());
         try (Stream<Path> paths = Files.walk(Paths.get(selectedDirectory.getAbsolutePath()))) {
             retList = paths
                     .filter(file -> validatePath(file))
