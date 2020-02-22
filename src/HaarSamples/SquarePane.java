@@ -1,6 +1,7 @@
 package HaarSamples;
 
 import javafx.animation.AnimationTimer;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
@@ -9,12 +10,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+
 class SquarePane {
 
-
-
-
-    int HANDLE_MOVE_RADIUS = 3;
 
     Square square;
     AngleLine angleLine;
@@ -78,7 +76,6 @@ class SquarePane {
 
     private void dragSquares(MouseEvent e) {
         if (square.isPointScale((int) e.getX(), (int) e.getY())) {
-            System.out.println("drag " + e.getX() + ":" + e.getY());
             double ex = e.getX();
             double ey = e.getY();
             if (ex >= 0 && ex <= paneWidth && ey >= 0 && ey <= paneHeight) {
@@ -87,10 +84,7 @@ class SquarePane {
             }
             square.handleScaleRadius = 10;
 
-        }
-
-        if (square.isPointMove((int) e.getX(), (int) e.getY())) {
-            System.out.println("drag " + e.getX() + ":" + e.getY());
+        } else if (square.isPointMove((int) e.getX(), (int) e.getY())) {
             double ex = e.getX();
             double ey = e.getY();
             if (ex >= 0 && ex <= paneWidth && ey >= 0 && ey <= paneHeight) {
@@ -106,7 +100,6 @@ class SquarePane {
 
     private void dragAngleLine(MouseEvent e) {
         if (angleLine.isBasePoint((int) e.getX(), (int) e.getY())) {
-            System.out.println("drag " + e.getX() + ":" + e.getY());
             double ex = e.getX();
             double ey = e.getY();
             if (ex >= 0 && ex <= paneWidth && ey >= 0 && ey <= paneHeight) {
@@ -114,11 +107,7 @@ class SquarePane {
                 angleLine.baseY = (int) e.getY();
             }
             angleLine.handleBaseRadius = 10;
-
-        }
-
-        if (angleLine.isDirectionPoint((int) e.getX(), (int) e.getY())) {
-            System.out.println("drag " + e.getX() + ":" + e.getY());
+        } else if (angleLine.isDirectionPoint((int) e.getX(), (int) e.getY())) {
             double ex = e.getX();
             double ey = e.getY();
             if (ex >= 0 && ex <= paneWidth && ey >= 0 && ey <= paneHeight) {
@@ -130,6 +119,7 @@ class SquarePane {
     }
 
     private void releaseAngleLine(MouseEvent e) {
+        System.out.println("Line angle: " + getAngleLineAngle());
         angleLine.handleBaseRadius = 5;
         angleLine.handleDirRadius = 5;
     }
@@ -154,12 +144,12 @@ class SquarePane {
 
     private void drawAngleLine() {
         gc.setStroke(Color.GREEN);
+        gc.strokeText("o", angleLine.baseX - 2, angleLine.baseY - 2);
         gc.strokeLine(angleLine.baseX, angleLine.baseY, angleLine.dirX, angleLine.dirY);
-        gc.strokeText(">", angleLine.dirX + 2, angleLine.dirY + 2);
         gc.strokeOval(angleLine.baseX - angleLine.handleBaseRadius / 2, angleLine.baseY - angleLine.handleBaseRadius / 2, angleLine.handleBaseRadius, angleLine.handleBaseRadius);
         gc.strokeOval(angleLine.dirX - angleLine.handleDirRadius / 2, angleLine.dirY - angleLine.handleDirRadius / 2, angleLine.handleDirRadius, angleLine.handleDirRadius);
         gc.setStroke(Color.RED);
-        gc.strokeText("0", angleLine.baseX - 2, angleLine.baseY - 2);
+        gc.strokeText("+", angleLine.dirX-4, angleLine.dirY+3);
     }
 
     public SquarePane(MainWindow mainWindow) {
@@ -219,6 +209,19 @@ class SquarePane {
 
     public void addToBox(Pane box) {
         box.getChildren().add(vbox);
+    }
+
+    public int getAngleLineAngle() {
+        int x = angleLine.dirX-angleLine.baseX;
+        int y = angleLine.dirY-angleLine.baseY;
+        Point2D point = new Point2D(x,y);
+        System.out.println(x + " " + y);
+        if (y < 0) {
+            return (int) point.angle(1, 0);
+        } else {
+            int angle = (int) point.angle(1, 0);
+            return  360-angle;
+        }
     }
 
 

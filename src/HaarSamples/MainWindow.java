@@ -1,8 +1,7 @@
 package HaarSamples;
 
+import HaarSamples.dao.SquareCoord;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -40,7 +39,7 @@ public class MainWindow extends Application {
     final Map<Path, Image> images = new HashMap<>();
     Image currentImage;
 
-    private String lastLoadPath = "c:/";
+    public String lastLoadPath = "c:/";
 
     public static Mode mode = Mode.ANGLE;
 
@@ -77,6 +76,7 @@ public class MainWindow extends Application {
 
 
     }
+
 
 
     private void saveKeys(Stage stage) {
@@ -221,6 +221,16 @@ public class MainWindow extends Application {
         );
         editFile.getItems().add(resetSquare);
 
+        MenuItem resetAngle = new MenuItem("Reset square");
+        resetAngle.setOnAction(e -> {
+                    squarePane.angleLine.baseX = 5;
+                    squarePane.angleLine.baseY = 5;
+                    squarePane.angleLine.dirX = 35;
+                    squarePane.angleLine.dirY = 35;
+                }
+        );
+        editFile.getItems().add(resetAngle);
+
 
         squarePane = new SquarePane(this);
         timeslider = new Timeslider(this);
@@ -268,7 +278,7 @@ public class MainWindow extends Application {
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
             if (key.getCode() == KeyCode.S) {
-                timeslider.setKeyAtThumb();
+                timeslider.setKey();
             }
         });
 

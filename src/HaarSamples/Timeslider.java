@@ -1,12 +1,11 @@
 package HaarSamples;
 
+import HaarSamples.dao.SquareCoord;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -15,6 +14,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -51,6 +51,7 @@ class Timeslider {
 
         Button nextButton = new Button("next");
         nextButton.setOnAction(e -> {
+            saveAngleBboxFile();
             int val = thumb.getCurrentValue();
             if (val < thumb.maxValue) {
                 nextFrame();
@@ -67,7 +68,10 @@ class Timeslider {
         });
 
         Button setKeyButton = new Button("key");
-        setKeyButton.setOnAction(e -> setKeyAtThumb());
+        setKeyButton.setOnAction(e -> {
+                    setKey();
+    }
+        );
 
 
         textCurrentKey = new TextField();
@@ -125,7 +129,6 @@ class Timeslider {
                 canvasGc.strokeOval(thumb.getX(), 5, 5, 5);
 
                 for (Map.Entry<Integer, SquareCoord> entry : keyframes.entrySet()) {
-
                     if(entry.getKey().equals(thumb.getCurrentValue())) {
                         canvasGc.setStroke(Color.RED);
                     } else {
@@ -170,6 +173,7 @@ class Timeslider {
     }
 
     public void nextFrame() {
+        saveAngleBboxFile();
         thumb.setCurrentValue(thumb.getCurrentValue()+1);
     }
 
@@ -181,10 +185,43 @@ class Timeslider {
         thumb.setCurrentValue(thumb.getCurrentValue()-1);
     }
 
-    public void setKeyAtThumb() {
+    public void setKey() {
+        if (MainWindow.mode.equals(MainWindow.Mode.BBOX)) { setKeyBbox();}
+        else if (MainWindow.mode.equals(MainWindow.Mode.ANGLE)) {saveAngleBboxFile();}
+    }
+
+    public void setKeyBbox() {
         addKeyFrame(thumb.getCurrentValue(), new SquareCoord(mainWindow.squarePane.square.lx, mainWindow.squarePane.square.ly, mainWindow.squarePane.square.rx, mainWindow.squarePane.square.ry));
     }
 
+
+
+    private void saveAngleBboxFile() {
+        File file = new File("/");
+        String path = textCurrentFile.getText();
+        String[] pathPart = path.split("\\\\");
+        String fileName = pathPart[pathPart.length-1].split("\\.")[0];
+        StringBuilder sb = new StringBuilder();
+        for (int i =0; i < pathPart.length-1;i++) {
+            sb.append(pathPart[i]+"/");
+        }
+        sb.append(fileName+".txt");
+        System.out.println("filename " + sb.toString());
+        try (PrintWriter writer = new PrintWriter(sb.toString(), "UTF-8");) {
+
+            writer.println(
+                    mainWindow.squarePane.getAngleLineAngle() + " " +
+                    mainWindow.squarePane.square.lx + " " +
+                    mainWindow.squarePane.square.ly + " " +
+                    mainWindow.squarePane.square.rx + " " +
+                    mainWindow.squarePane.square.ry
+            );
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void setThumbMaxValue(int max) {
         System.out.println("mv " + max);
