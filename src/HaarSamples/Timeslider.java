@@ -43,7 +43,7 @@ class Timeslider {
 
     @SuppressWarnings("SpellCheckingInspection")
     public Timeslider(MainWindow mainWindow) {
-
+//TODO НАДО еще сделать загрузку файла с углами, если есть, прежде чем переходить на другой кадр
         this.mainWindow = mainWindow;
         thumb = new Thumb(mainWindow,0,0, 100, SLIDE_LINE_RIGHT);
         frames = new TreeMap<>();
