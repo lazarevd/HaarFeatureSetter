@@ -34,6 +34,7 @@ class Thumb {
                 mainW.timeslider.setSquarePaneFromKey(mainWindow.squarePane, getCurrentValue());
                 mainW.timeslider.textCurrentKey.setText(Integer.toString(getCurrentValue()));
                 mainW.timeslider.textCurrentFile.setText(path.toString());
+
             } catch (IndexOutOfBoundsException ie) {
                 System.out.println("No images loaded");
             }

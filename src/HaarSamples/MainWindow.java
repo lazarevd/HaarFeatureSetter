@@ -1,14 +1,15 @@
 package HaarSamples;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -27,6 +28,11 @@ import java.util.stream.Collectors;
 
 public class MainWindow extends Application {
 
+    public enum Mode {
+        BBOX,
+        ANGLE
+    }
+
     private Scene scene;
     Timeslider timeslider;
 
@@ -36,15 +42,12 @@ public class MainWindow extends Application {
 
     private String lastLoadPath = "c:/";
 
-
-
-
+    public static Mode mode = Mode.ANGLE;
 
     SquarePane squarePane;
 
 
     private int maxWidth, maxHeight;
-
 
 
     private void savePosFile(Stage stage) {
@@ -87,7 +90,7 @@ public class MainWindow extends Application {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
                 for (Map.Entry<Integer, SquareCoord> ent : timeslider.getKeyframes().entrySet()) {
-                    writer.println(ent.getKey()+";"+ ent.getValue().lx+" "+ent.getValue().ly+" "+ent.getValue().rx+" "+ent.getValue().ry);
+                    writer.println(ent.getKey() + ";" + ent.getValue().lx + " " + ent.getValue().ly + " " + ent.getValue().rx + " " + ent.getValue().ry);
                 }
                 writer.close();
             } catch (IOException ex) {
@@ -110,25 +113,26 @@ public class MainWindow extends Application {
                 files.forEach(e -> {
                     String line[] = e.split(";");
                     int keyFrame = 0;
-                    try {keyFrame = Integer.parseInt(line[0]);}
-                    catch (NumberFormatException nes) {
+                    try {
+                        keyFrame = Integer.parseInt(line[0]);
+                    } catch (NumberFormatException nes) {
                         System.out.println("Error in key frame format. Must be integer");
                     }
                     int[] coords = new int[4];
                     String[] coordStr = line[1].split(" ");
                     for (int i = 0; i < coordStr.length; i++) {
-                        try {coords[i] = Integer.parseInt(coordStr[i]);}
-                        catch (NumberFormatException nex) {
+                        try {
+                            coords[i] = Integer.parseInt(coordStr[i]);
+                        } catch (NumberFormatException nex) {
                             System.out.println("Error in square coordinates format. Must be integer");
                         }
                     }
                     if (keyFrame > 0) {
-                        timeslider.addKeyFrame(keyFrame, new SquareCoord(coords[0], coords[1],coords[2], coords[3]));
+                        timeslider.addKeyFrame(keyFrame, new SquareCoord(coords[0], coords[1], coords[2], coords[3]));
                     }
                 });
             }
-        }
-        catch (IOException ioex) {
+        } catch (IOException ioex) {
             System.out.println("IOException: Unable to read keys file. Its not exist or access denied");
         }
 
@@ -136,30 +140,26 @@ public class MainWindow extends Application {
     }
 
 
-    private void loadImages (Stage stage) {
-
+    private void loadImages(Stage stage) {
         paths = getPaths(stage);
-
         Stream<Path> stream = paths.stream();
         paths = stream.filter(this::validatePath).collect(Collectors.toList());
-
         paths.forEach(p -> {
             Image img = new Image("file:" + p);
             images.put(p, img);
-            if (img.getHeight() > maxHeight)  maxHeight = (int)img.getHeight();
-            if (img.getWidth() > maxWidth)  maxWidth = (int)img.getWidth();
+            if (img.getHeight() > maxHeight) maxHeight = (int) img.getHeight();
+            if (img.getWidth() > maxWidth) maxWidth = (int) img.getWidth();
         });
         System.out.println("Loaded: " + paths.size());
-        timeslider.setThumbMaxValue(paths.size()-1);
+        timeslider.setThumbMaxValue(paths.size() - 1);
         timeslider.thumb.setCurrentValue(1);
 
     }
 
     public static void main(String[] args) {
-
+        System.out.println("Start");
         launch(args);
     }
-
 
 
     @Override
@@ -167,7 +167,6 @@ public class MainWindow extends Application {
 
 
         MenuBar menuBar = new MenuBar();
-
         Menu menuFile = new Menu("File");
         menuBar.getMenus().addAll(menuFile);
 
@@ -177,30 +176,26 @@ public class MainWindow extends Application {
         menuFile.getItems().add(loadImages);
         MenuItem saveKeys = new MenuItem("Save keys");
         saveKeys.setOnAction(e -> {
-                                    saveKeys(primaryStage);
-                                }
+                    saveKeys(primaryStage);
+                }
         );
         menuFile.getItems().add(saveKeys);
         MenuItem loadKeys = new MenuItem("Load keys");
         loadKeys.setOnAction(e -> {
-                                     loadKeys(primaryStage);
-                                 }
+                    loadKeys(primaryStage);
+                }
         );
         menuFile.getItems().add(loadKeys);
         MenuItem savePosFile = new MenuItem("Build positive file");
         savePosFile.setOnAction(e -> {
-                                     savePosFile(primaryStage);
-                             }
+                    savePosFile(primaryStage);
+                }
         );
         menuFile.getItems().add(savePosFile);
 
 
-
-
-
         Menu editFile = new Menu("Edit");
         menuBar.getMenus().addAll(editFile);
-
 
 
         MenuItem deleteKey = new MenuItem("Delete key");
@@ -227,12 +222,31 @@ public class MainWindow extends Application {
         editFile.getItems().add(resetSquare);
 
 
-
         squarePane = new SquarePane(this);
         timeslider = new Timeslider(this);
 
-        primaryStage.setTitle("Hello World!");
+        //MODE
+        ToggleGroup modeRadGrp = new ToggleGroup();
+        RadioButton modeAngleBtn = new RadioButton(Mode.ANGLE.toString());
+        modeAngleBtn.setToggleGroup(modeRadGrp);
+        modeAngleBtn.setSelected(true);
+        RadioButton modeBboxBtn = new RadioButton(Mode.BBOX.toString());
+        modeBboxBtn.setToggleGroup(modeRadGrp);
+        HBox radBtnBox = new HBox();
+        modeRadGrp.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (modeRadGrp.getSelectedToggle() != null) {
+                RadioButton rb = (RadioButton) modeRadGrp.getSelectedToggle();
+                if (rb.getText().equals(Mode.ANGLE.toString())) {
+                    mode = Mode.ANGLE;
+                } else if (rb.getText().equals(Mode.BBOX.toString())) {
+                    mode = Mode.BBOX;
+                }
+            }
+        });
 
+        radBtnBox.getChildren().addAll(modeBboxBtn, modeAngleBtn);
+
+        primaryStage.setTitle("Hello World!");
 
 
         StackPane root = new StackPane();
@@ -241,9 +255,10 @@ public class MainWindow extends Application {
         vbox.getChildren().add(menuBar);
 
 
-
         squarePane.addToBox(vbox);
         timeslider.addToBox(vbox);
+        vbox.getChildren().addAll(radBtnBox);
+
         root.getChildren().add(vbox);
         scene = new Scene(root, 850, 300);
         primaryStage.setScene(scene);
@@ -252,32 +267,25 @@ public class MainWindow extends Application {
         primaryStage.show();
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
-            if(key.getCode()==KeyCode.S) {
+            if (key.getCode() == KeyCode.S) {
                 timeslider.setKeyAtThumb();
             }
         });
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
-            if(key.getCode()==KeyCode.X) {
+            if (key.getCode() == KeyCode.X) {
                 timeslider.nextFrame();
             }
         });
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
-            if(key.getCode()==KeyCode.Z) {
+            if (key.getCode() == KeyCode.Z) {
                 timeslider.prevFrame();
             }
         });
 
 
-
     }
-
-
-
-
-
-
 
 
     private boolean validatePath(Path path) {
@@ -293,7 +301,7 @@ public class MainWindow extends Application {
         chooser.setInitialDirectory(lastImagesFilesLoad);
         File selectedDirectory = chooser.showDialog(stage);
         lastLoadPath = selectedDirectory.getAbsolutePath();
-        System.out.println("Loaded images from: " +selectedDirectory.getAbsolutePath());
+        System.out.println("Loaded images from: " + selectedDirectory.getAbsolutePath());
         try (Stream<Path> paths = Files.walk(Paths.get(selectedDirectory.getAbsolutePath()))) {
             retList = paths
                     .filter(file -> validatePath(file))
@@ -301,10 +309,8 @@ public class MainWindow extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    return retList;
+        return retList;
     }
-
-
 
 
 }
