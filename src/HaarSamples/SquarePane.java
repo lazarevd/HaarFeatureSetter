@@ -13,6 +13,11 @@ import javafx.scene.paint.Color;
 
 class SquarePane {
 
+    int HANDLE_BASE = 7;
+    int HANDLE_DRAG = 10;
+
+    int DRAW_ANGLE_LINE_BASE_RAD = 25;
+    int DRAW_ANGLE_LINE_DIR_RAD = 3;
 
     Square square;
     AngleLine angleLine;
@@ -49,8 +54,8 @@ class SquarePane {
 
 
     class AngleLine {
-        int handleBaseRadius = 3;
-        int handleDirRadius = 3;
+        int handleBaseRadius = HANDLE_BASE;
+        int handleDirRadius = HANDLE_BASE;
         int baseX;
         int baseY;
         int dirX;
@@ -106,7 +111,7 @@ class SquarePane {
                 angleLine.baseX = (int) e.getX();
                 angleLine.baseY = (int) e.getY();
             }
-            angleLine.handleBaseRadius = 10;
+            angleLine.handleBaseRadius = HANDLE_DRAG;
         } else if (angleLine.isDirectionPoint((int) e.getX(), (int) e.getY())) {
             double ex = e.getX();
             double ey = e.getY();
@@ -114,14 +119,14 @@ class SquarePane {
                 angleLine.dirX = (int) e.getX();
                 angleLine.dirY= (int) e.getY();
             }
-            angleLine.handleDirRadius = 10;
+            angleLine.handleDirRadius = HANDLE_DRAG;
         }
     }
 
     private void releaseAngleLine(MouseEvent e) {
         System.out.println("Line angle: " + getAngleLineAngle());
-        angleLine.handleBaseRadius = 5;
-        angleLine.handleDirRadius = 5;
+        angleLine.handleBaseRadius = HANDLE_BASE;
+        angleLine.handleDirRadius = HANDLE_BASE;
     }
 
 
@@ -143,11 +148,11 @@ class SquarePane {
     }
 
     private void drawAngleLine() {
-        gc.setStroke(Color.GREEN);
-        gc.strokeText("o", angleLine.baseX - 2, angleLine.baseY - 2);
+        gc.setStroke(Color.WHITE);
+        //gc.strokeText("o", angleLine.baseX - 2, angleLine.baseY - 2);
         gc.strokeLine(angleLine.baseX, angleLine.baseY, angleLine.dirX, angleLine.dirY);
-        gc.strokeOval(angleLine.baseX - angleLine.handleBaseRadius / 2, angleLine.baseY - angleLine.handleBaseRadius / 2, angleLine.handleBaseRadius, angleLine.handleBaseRadius);
-        gc.strokeOval(angleLine.dirX - angleLine.handleDirRadius / 2, angleLine.dirY - angleLine.handleDirRadius / 2, angleLine.handleDirRadius, angleLine.handleDirRadius);
+        gc.strokeOval(angleLine.baseX - (angleLine.handleBaseRadius+DRAW_ANGLE_LINE_BASE_RAD) / 2, angleLine.baseY - (angleLine.handleBaseRadius+DRAW_ANGLE_LINE_BASE_RAD) / 2, angleLine.handleBaseRadius+DRAW_ANGLE_LINE_BASE_RAD, angleLine.handleBaseRadius+DRAW_ANGLE_LINE_BASE_RAD);
+        gc.strokeOval(angleLine.dirX - (angleLine.handleDirRadius+DRAW_ANGLE_LINE_DIR_RAD) / 2, angleLine.dirY - (angleLine.handleDirRadius+DRAW_ANGLE_LINE_DIR_RAD) / 2, angleLine.handleDirRadius+DRAW_ANGLE_LINE_DIR_RAD, angleLine.handleDirRadius+DRAW_ANGLE_LINE_DIR_RAD);
         gc.setStroke(Color.RED);
         gc.strokeText("+", angleLine.dirX-4, angleLine.dirY+3);
     }

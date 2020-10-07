@@ -15,9 +15,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 
 class Timeslider {
@@ -175,6 +177,7 @@ class Timeslider {
     public void nextFrame() {
         saveAngleBboxFile();
         thumb.setCurrentValue(thumb.getCurrentValue()+1);
+        readBboxAndAngleFromFile(textCurrentFile.getText());
     }
 
     public void setFrame(int frame) {
@@ -183,6 +186,7 @@ class Timeslider {
 
     public void prevFrame() {
         thumb.setCurrentValue(thumb.getCurrentValue()-1);
+        setParamsFromFile(textCurrentFile.getText());
     }
 
     public void setKey() {
@@ -195,26 +199,55 @@ class Timeslider {
     }
 
 
+    private boolean readBboxAndAngleFromFile(String fileName) {
+        File saveFile = new File(defineTextFilePath(fileName));
+        System.out.println(saveFile);
+        if (saveFile != null  && saveFile.exists() && !saveFile.isDirectory()) {
+            try (Stream<String> lines = Files.lines(saveFile.toPath())) {
+                lines.forEach(e -> {
+                    setParamsFromFile(e);
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
 
-    private void saveAngleBboxFile() {
-        File file = new File("/");
-        String path = textCurrentFile.getText();
-        String[] pathPart = path.split("\\\\");
+    private void setParamsFromFile(String paramsString) {
+       try {
+           String[] params = paramsString.split(";");
+           mainWindow.squarePane.square.lx = Integer.parseInt(params[2]);
+           mainWindow.squarePane.square.lx = Integer.parseInt(params[3]);
+           mainWindow.squarePane.square.lx = Integer.parseInt(params[4]);
+           mainWindow.squarePane.square.lx = Integer.parseInt(params[5]);
+       } catch (Exception e) {
+           System.out.println(e);
+       }
+    }
+
+    private String defineTextFilePath(String imagePath) {
+        String[] pathPart = imagePath.split("\\\\");
         String fileName = pathPart[pathPart.length-1].split("\\.")[0];
         StringBuilder sb = new StringBuilder();
         for (int i =0; i < pathPart.length-1;i++) {
             sb.append(pathPart[i]+"/");
         }
         sb.append(fileName+".txt");
-        System.out.println("filename " + sb.toString());
-        try (PrintWriter writer = new PrintWriter(sb.toString(), "UTF-8");) {
+        return sb.toString();
+    }
+
+    private void saveAngleBboxFile() {
+        String path = defineTextFilePath(textCurrentFile.getText());
+        System.out.println("filename " + path);
+        try (PrintWriter writer = new PrintWriter(path, "UTF-8");) {
 
             writer.println(
-                    mainWindow.squarePane.getAngleLineAngle() + " " +
-                    mainWindow.squarePane.square.lx + " " +
-                    mainWindow.squarePane.square.ly + " " +
-                    mainWindow.squarePane.square.rx + " " +
-                    mainWindow.squarePane.square.ry
+                    textCurrentFile.getText() + ";" +
+                            mainWindow.squarePane.getAngleLineAngle() + ";" +
+                            mainWindow.squarePane.angleLine.baseX + ";" +
+                            mainWindow.squarePane.angleLine.baseY
             );
         } catch (FileNotFoundException e) {
             e.printStackTrace();
